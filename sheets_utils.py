@@ -162,7 +162,7 @@ def get_recently_completed_tasks(days: int = 7) -> List[Task]:
     active_tasks = get_active_tasks()
     return [
         task for task in active_tasks 
-        if task.status == "Completed" and task.status_update_time >= cutoff_date
+        if task.status == "已完成" and task.status_update_time >= cutoff_date
     ]
 
 def get_upcoming_tasks(days: int = 21) -> List[Task]:
@@ -172,7 +172,7 @@ def get_upcoming_tasks(days: int = 21) -> List[Task]:
     active_tasks = get_active_tasks()
     return [
         task for task in active_tasks 
-        if task.status != "Completed" and task.end_date and today <= task.end_date <= future_date
+        if task.status != "已完成" and task.end_date and today <= task.end_date <= future_date
     ]
 
 def get_current_year_tasks() -> List[Task]:
@@ -222,7 +222,7 @@ def calculate_task_progress(tasks: List[Task]) -> float:
     if not tasks:
         return 0.0
     
-    completed = sum(1 for task in tasks if task.status == "Completed")
+    completed = sum(1 for task in tasks if task.status == "已完成")
     return (completed / len(tasks)) * 100
 
 def get_task_by_id(task_id: str) -> Optional[Task]:
