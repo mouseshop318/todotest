@@ -7,29 +7,29 @@ import sheets_utils
 from models import Task
 
 st.set_page_config(
-    page_title="Filter View - To-Do Management System",
+    page_title="篩選視圖 - 待辦事項管理系統",
     page_icon="🔍",
     layout="wide"
 )
 
 def main():
-    st.title("Task Filter View")
-    st.write("Filter and visualize tasks in different ways.")
+    st.title("任務篩選視圖")
+    st.write("以不同方式篩選和視覺化任務。")
     
-    # Load data
+    # 載入數據
     tasks = sheets_utils.get_active_tasks()
     parameters = sheets_utils.load_parameters()
     
     if not tasks:
-        st.info("No tasks available. Add some tasks in the main page first.")
+        st.info("沒有可用的任務。請先在主頁面新增一些任務。")
         return
     
-    # Create tabs for different views
+    # 創建不同視圖的頁籤
     tab1, tab2, tab3, tab4 = st.tabs([
-        "Advanced Filter", 
-        "Calendar View", 
-        "Predefined Filters",
-        "Task Statistics"
+        "進階篩選", 
+        "日曆視圖", 
+        "預設篩選器",
+        "任務統計"
     ])
     
     with tab1:

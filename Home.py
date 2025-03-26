@@ -32,78 +32,78 @@ def main():
         task_overview(tasks)
 
 def display_tasks(tasks, parameters):
-    """Display and manage existing tasks."""
-    st.header("Task List")
+    """顯示和管理現有任務。"""
+    st.header("任務列表")
     
     if not tasks:
-        st.info("No tasks available. Add a task to get started.")
+        st.info("目前沒有可用的任務。請新增一個任務開始使用。")
         return
     
-    # Convert tasks to DataFrame for display
+    # 將任務轉換為DataFrame以便顯示
     df = sheets_utils.tasks_to_dataframe(tasks)
     
-    # Add filter options in sidebar
-    with st.expander("Filter Tasks", expanded=False):
+    # 添加篩選選項
+    with st.expander("篩選任務", expanded=False):
         col1, col2 = st.columns(2)
         
         with col1:
-            # Text search
-            search_term = st.text_input("Search in Sub Task", key="search_subtask")
+            # 文字搜索
+            search_term = st.text_input("搜索任務子項", key="search_subtask")
             
-            # Main task filter
+            # 任務大項篩選
             selected_main_task = st.selectbox(
-                "Main Task", 
-                options=["All"] + parameters["main_task"],
+                "任務大項", 
+                options=["全部"] + parameters["main_task"],
                 key="filter_main_task"
             )
             
-            # Priority filter
+            # 優先級篩選
             selected_priority = st.selectbox(
-                "Priority", 
-                options=["All"] + parameters["priority"],
+                "優先級", 
+                options=["全部"] + parameters["priority"],
                 key="filter_priority"
             )
         
         with col2:
-            # Status filter
+            # 狀態篩選
             selected_status = st.selectbox(
-                "Status", 
-                options=["All"] + parameters["status"],
+                "狀態", 
+                options=["全部"] + parameters["status"],
                 key="filter_status"
             )
             
-            # Responsible filter
+            # 負責人篩選
             selected_responsible = st.selectbox(
-                "Responsible", 
-                options=["All"] + parameters["responsible"],
+                "負責人", 
+                options=["全部"] + parameters["responsible"],
                 key="filter_responsible"
             )
             
-            # Date range
-            use_date_filter = st.checkbox("Filter by End Date", key="use_date_filter")
+            # 日期範圍
+            use_date_filter = st.checkbox("按結束日期篩選", key="use_date_filter")
             if use_date_filter:
                 date_range = st.date_input(
-                    "End Date Range",
+                    "結束日期範圍",
                     value=(date.today(), date.today()),
                     key="date_filter"
                 )
     
-    # Apply filters
+    # 應用篩選條件
     filtered_tasks = tasks
     
     if search_term:
         filtered_tasks = [t for t in filtered_tasks if search_term.lower() in t.sub_task.lower()]
     
-    if selected_main_task != "All":
+    if selected_main_task != "全部":
         filtered_tasks = [t for t in filtered_tasks if t.main_task == selected_main_task]
     
-    if selected_priority != "All":
+    if selected_priority != "全部":
         filtered_tasks = [t for t in filtered_tasks if t.priority == selected_priority]
     
-    if selected_status != "All":
+    if selected_status != "全部":
         filtered_tasks = [t for t in filtered_tasks if t.status == selected_status]
     
-    if selected_responsible != "All":
+    if selected_responsible != "全部":
         filtered_tasks = [t for t in filtered_tasks if t.responsible == selected_responsible]
     
     if use_date_filter and len(date_range) == 2:
@@ -113,14 +113,14 @@ def display_tasks(tasks, parameters):
             if t.end_date and start_date <= t.end_date <= end_date
         ]
     
-    # Convert filtered tasks to DataFrame
+    # 將篩選後的任務轉換為DataFrame
     filtered_df = sheets_utils.tasks_to_dataframe(filtered_tasks)
     
     if filtered_df.empty:
-        st.info("No tasks match the selected filters.")
+        st.info("沒有符合篩選條件的任務。")
         return
     
-    # Display tasks with edit and delete buttons
+    # 顯示帶有編輯和刪除按鈕的任務
     for index, row in filtered_df.iterrows():
         with st.container():
             col1, col2, col3 = st.columns([3, 1, 0.5])
@@ -130,21 +130,21 @@ def display_tasks(tasks, parameters):
                 st.markdown(task_title)
                 
                 details = (
-                    f"**Priority:** {row['Priority']} | "
-                    f"**Status:** {row['Status']} | "
-                    f"**Responsible:** {row['Responsible']}"
+                    f"**優先級:** {row['Priority']} | "
+                    f"**狀態:** {row['Status']} | "
+                    f"**負責人:** {row['Responsible']}"
                 )
                 st.markdown(details)
                 
                 if row['Start Date'] and row['End Date']:
-                    dates = f"**Timeline:** {row['Start Date'].strftime('%Y-%m-%d')} to {row['End Date'].strftime('%Y-%m-%d')}"
+                    dates = f"**時間線:** {row['Start Date'].strftime('%Y-%m-%d')} 至 {row['End Date'].strftime('%Y-%m-%d')}"
                     st.markdown(dates)
                 
                 if row['Notes']:
-                    st.markdown(f"**Notes:** {row['Notes']}")
+                    st.markdown(f"**備註:** {row['Notes']}")
             
             with col2:
-                st.button("Edit", key=f"edit_{row['ID']}", on_click=set_task_for_edit, args=(row['ID'],))
+                st.button("編輯", key=f"edit_{row['ID']}", on_click=set_task_for_edit, args=(row['ID'],))
             
             with col3:
                 st.button("🗑️", key=f"delete_{row['ID']}", on_click=delete_task, args=(row['ID'],))
@@ -152,14 +152,14 @@ def display_tasks(tasks, parameters):
             st.divider()
 
 def set_task_for_edit(task_id):
-    """Set the task to be edited in session state."""
+    """設置要編輯的任務在 session state 中。"""
     task = sheets_utils.get_task_by_id(task_id)
     if task:
         st.session_state['editing_task'] = task
         st.session_state['is_editing'] = True
 
 def delete_task(task_id):
-    """Delete a task."""
+    """刪除任務。"""
     if st.session_state.get('is_editing', False) and \
        st.session_state.get('editing_task') and \
        st.session_state['editing_task'].id == task_id:
@@ -167,82 +167,82 @@ def delete_task(task_id):
         st.session_state['editing_task'] = None
     
     sheets_utils.delete_task(task_id)
-    st.success("Task marked as deleted!")
+    st.success("任務已標記為刪除！")
     st.rerun()
 
 def add_edit_task(parameters):
-    """Add a new task or edit an existing one."""
+    """新增或編輯任務。"""
     is_editing = st.session_state.get('is_editing', False)
     editing_task = st.session_state.get('editing_task', None)
     
     if is_editing:
-        st.header("Edit Task")
+        st.header("編輯任務")
     else:
-        st.header("Add New Task")
+        st.header("新增任務")
     
     with st.form(key="task_form"):
         col1, col2 = st.columns(2)
         
         with col1:
             sub_task = st.text_input(
-                "Sub Task", 
+                "任務子項", 
                 value=editing_task.sub_task if is_editing else ""
             )
             
             main_task = st.selectbox(
-                "Main Task", 
+                "任務大項", 
                 options=parameters["main_task"],
                 index=parameters["main_task"].index(editing_task.main_task) if is_editing and editing_task.main_task in parameters["main_task"] else 0
             )
             
             priority = st.selectbox(
-                "Priority", 
+                "優先級", 
                 options=parameters["priority"],
                 index=parameters["priority"].index(editing_task.priority) if is_editing and editing_task.priority in parameters["priority"] else 1
             )
             
             status = st.selectbox(
-                "Status", 
+                "狀態", 
                 options=parameters["status"],
                 index=parameters["status"].index(editing_task.status) if is_editing and editing_task.status in parameters["status"] else 0
             )
         
         with col2:
             start_date = st.date_input(
-                "Start Date",
+                "開始日期",
                 value=editing_task.start_date if is_editing and editing_task.start_date else date.today()
             )
             
             end_date = st.date_input(
-                "End Date",
+                "結束日期",
                 value=editing_task.end_date if is_editing and editing_task.end_date else date.today()
             )
             
             responsible = st.selectbox(
-                "Responsible", 
+                "負責人", 
                 options=parameters["responsible"],
                 index=parameters["responsible"].index(editing_task.responsible) if is_editing and editing_task.responsible in parameters["responsible"] else 0
             )
         
         notes = st.text_area(
-            "Notes",
+            "備註",
             value=editing_task.notes if is_editing else ""
         )
         
-        submit_label = "Update Task" if is_editing else "Add Task"
+        submit_label = "更新任務" if is_editing else "新增任務"
         submitted = st.form_submit_button(submit_label)
         
         if submitted:
             if not sub_task:
-                st.error("Sub Task cannot be empty!")
+                st.error("任務子項不能為空！")
                 return
             
             if end_date < start_date:
-                st.error("End Date must be on or after Start Date!")
+                st.error("結束日期必須在開始日期當天或之後！")
                 return
             
             if is_editing:
-                # Update existing task
+                # 更新現有任務
                 updated_task = Task(
                     id=editing_task.id,
                     sub_task=sub_task,
@@ -259,9 +259,9 @@ def add_edit_task(parameters):
                 sheets_utils.update_task(editing_task.id, updated_task)
                 st.session_state['is_editing'] = False
                 st.session_state['editing_task'] = None
-                st.success("Task updated successfully!")
+                st.success("任務更新成功！")
             else:
-                # Create new task
+                # 創建新任務
                 new_task = Task(
                     sub_task=sub_task,
                     main_task=main_task,
@@ -273,28 +273,28 @@ def add_edit_task(parameters):
                     notes=notes
                 )
                 sheets_utils.add_task(new_task)
-                st.success("Task added successfully!")
+                st.success("任務新增成功！")
             
             st.rerun()
     
     if is_editing:
-        if st.button("Cancel Editing"):
+        if st.button("取消編輯"):
             st.session_state['is_editing'] = False
             st.session_state['editing_task'] = None
             st.rerun()
 
 def task_overview(tasks):
-    """Show task overview and visualizations."""
-    st.header("Task Overview")
+    """顯示任務概覽和視覺化圖表。"""
+    st.header("任務概覽")
     
     if not tasks:
-        st.info("No tasks available for analysis. Add some tasks first.")
+        st.info("沒有可分析的任務。請先新增一些任務。")
         return
     
     col1, col2 = st.columns(2)
     
     with col1:
-        # Status distribution
+        # 狀態分佈
         status_counts = {}
         for task in tasks:
             if task.status in status_counts:
@@ -303,21 +303,21 @@ def task_overview(tasks):
                 status_counts[task.status] = 1
                 
         df_status = pd.DataFrame({
-            'Status': list(status_counts.keys()),
-            'Count': list(status_counts.values())
+            '狀態': list(status_counts.keys()),
+            '數量': list(status_counts.values())
         })
         
         fig_status = px.pie(
             df_status, 
-            values='Count', 
-            names='Status', 
-            title='Task Status Distribution',
+            values='數量', 
+            names='狀態', 
+            title='任務狀態分佈',
             color_discrete_sequence=px.colors.qualitative.Pastel
         )
         st.plotly_chart(fig_status, use_container_width=True)
     
     with col2:
-        # Priority distribution
+        # 優先級分佈
         priority_counts = {}
         for task in tasks:
             if task.priority in priority_counts:
@@ -326,49 +326,49 @@ def task_overview(tasks):
                 priority_counts[task.priority] = 1
                 
         df_priority = pd.DataFrame({
-            'Priority': list(priority_counts.keys()),
-            'Count': list(priority_counts.values())
+            '優先級': list(priority_counts.keys()),
+            '數量': list(priority_counts.values())
         })
         
         fig_priority = px.pie(
             df_priority, 
-            values='Count', 
-            names='Priority', 
-            title='Task Priority Distribution',
+            values='數量', 
+            names='優先級', 
+            title='任務優先級分佈',
             color_discrete_sequence=px.colors.qualitative.Set2
         )
         st.plotly_chart(fig_priority, use_container_width=True)
     
-    # Calculate overall progress
+    # 計算總體進度
     progress = sheets_utils.calculate_task_progress(tasks)
-    st.subheader("Overall Progress")
+    st.subheader("總體進度")
     st.progress(progress / 100)
-    st.text(f"{progress:.1f}% of tasks completed")
+    st.text(f"{progress:.1f}% 的任務已完成")
     
-    # Task timeline
+    # 任務時間線
     tasks_with_dates = [task for task in tasks if task.start_date and task.end_date]
     if tasks_with_dates:
-        st.subheader("Task Timeline")
+        st.subheader("任務時間線")
         
         df_timeline = pd.DataFrame([
             {
-                'Task': task.sub_task,
-                'Start': task.start_date,
-                'End': task.end_date,
-                'Status': task.status,
-                'Priority': task.priority
+                '任務': task.sub_task,
+                '開始': task.start_date,
+                '結束': task.end_date,
+                '狀態': task.status,
+                '優先級': task.priority
             }
             for task in tasks_with_dates
         ])
         
         fig_timeline = px.timeline(
             df_timeline,
-            x_start='Start',
-            x_end='End',
-            y='Task',
-            color='Status',
-            hover_data=['Priority'],
-            title="Task Timeline"
+            x_start='開始',
+            x_end='結束',
+            y='任務',
+            color='狀態',
+            hover_data=['優先級'],
+            title="任務時間線"
         )
         fig_timeline.update_yaxes(autorange="reversed")
         st.plotly_chart(fig_timeline, use_container_width=True)
