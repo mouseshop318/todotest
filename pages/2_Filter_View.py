@@ -45,64 +45,64 @@ def main():
         task_statistics_view(tasks, parameters)
 
 def advanced_filter_view(tasks, parameters):
-    """Advanced filter view with multiple filter options."""
-    st.header("Advanced Filter")
+    """進階篩選視圖，提供多種篩選選項。"""
+    st.header("進階篩選")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        # Text search
-        search_term = st.text_input("Search in Sub Task", key="adv_search_subtask")
+        # 文字搜索
+        search_term = st.text_input("搜索任務子項", key="adv_search_subtask")
         
-        # Main task filter
+        # 任務大項篩選
         selected_main_task = st.multiselect(
-            "Main Task", 
+            "任務大項", 
             options=parameters["main_task"],
             key="adv_filter_main_task"
         )
         
-        # Priority filter
+        # 優先級篩選
         selected_priority = st.multiselect(
-            "Priority", 
+            "優先級", 
             options=parameters["priority"],
             key="adv_filter_priority"
         )
     
     with col2:
-        # Status filter
+        # 狀態篩選
         selected_status = st.multiselect(
-            "Status", 
+            "狀態", 
             options=parameters["status"],
             key="adv_filter_status"
         )
         
-        # Responsible filter
+        # 負責人篩選
         selected_responsible = st.multiselect(
-            "Responsible", 
+            "負責人", 
             options=parameters["responsible"],
             key="adv_filter_responsible"
         )
     
     with col3:
-        # Date range for start date
-        use_start_date_filter = st.checkbox("Filter by Start Date", key="use_start_date_filter")
+        # 開始日期範圍
+        use_start_date_filter = st.checkbox("按開始日期篩選", key="use_start_date_filter")
         if use_start_date_filter:
             start_date_range = st.date_input(
-                "Start Date Range",
+                "開始日期範圍",
                 value=(date.today() - timedelta(days=30), date.today() + timedelta(days=30)),
                 key="start_date_filter"
             )
         
-        # Date range for end date
-        use_end_date_filter = st.checkbox("Filter by End Date", key="use_end_date_filter")
+        # 結束日期範圍
+        use_end_date_filter = st.checkbox("按結束日期篩選", key="use_end_date_filter")
         if use_end_date_filter:
             end_date_range = st.date_input(
-                "End Date Range",
+                "結束日期範圍",
                 value=(date.today() - timedelta(days=30), date.today() + timedelta(days=30)),
                 key="end_date_filter"
             )
     
-    # Apply filters
+    # 應用篩選條件
     filtered_tasks = tasks
     
     if search_term:
@@ -134,150 +134,150 @@ def advanced_filter_view(tasks, parameters):
             if t.end_date and start_date <= t.end_date <= end_date
         ]
     
-    # Display results
-    st.subheader("Filter Results")
+    # 顯示結果
+    st.subheader("篩選結果")
     if not filtered_tasks:
-        st.info("No tasks match the selected filters.")
+        st.info("沒有符合所選篩選條件的任務。")
         return
     
-    # Display options
+    # 顯示選項
     view_option = st.radio(
-        "Select View",
-        options=["Table View", "Card View"],
+        "選擇視圖",
+        options=["表格視圖", "卡片視圖"],
         horizontal=True
     )
     
-    if view_option == "Table View":
+    if view_option == "表格視圖":
         display_table_view(filtered_tasks)
     else:
         display_card_view(filtered_tasks)
 
 def display_table_view(tasks):
-    """Display tasks in a table format."""
+    """以表格格式顯示任務。"""
     df = sheets_utils.tasks_to_dataframe(tasks)
     
-    # Reorder columns for better display
+    # 重新排序列以便更好地顯示
     display_columns = [
         'Sub Task', 'Main Task', 'Priority', 'Status', 
         'Start Date', 'End Date', 'Responsible', 'Notes'
     ]
     
-    # Format dates for display
+    # 格式化日期以便顯示
     if 'Start Date' in df.columns:
         df['Start Date'] = df['Start Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notna(x) else '')
     
     if 'End Date' in df.columns:
         df['End Date'] = df['End Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notna(x) else '')
     
-    # Display the table
+    # 顯示表格
     st.dataframe(df[display_columns], use_container_width=True)
     
-    # Export options
-    if st.button("Export to CSV"):
+    # 導出選項
+    if st.button("導出為CSV"):
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="Download CSV",
+            label="下載CSV",
             data=csv,
-            file_name="tasks_export.csv",
+            file_name="任務導出.csv",
             mime="text/csv"
         )
 
 def display_card_view(tasks):
-    """Display tasks in a card format."""
-    # Create columns for cards layout
+    """以卡片格式顯示任務。"""
+    # 創建卡片布局的列
     col1, col2 = st.columns(2)
     
-    # Distribute tasks between columns
+    # 在列之間分配任務
     for i, task in enumerate(tasks):
         col = col1 if i % 2 == 0 else col2
         
         with col:
             with st.container(border=True):
                 st.subheader(task.sub_task)
-                st.caption(f"**Main Task:** {task.main_task}")
+                st.caption(f"**任務大項:** {task.main_task}")
                 
                 col_a, col_b = st.columns(2)
                 with col_a:
-                    st.write(f"**Priority:** {task.priority}")
-                    st.write(f"**Status:** {task.status}")
+                    st.write(f"**優先級:** {task.priority}")
+                    st.write(f"**狀態:** {task.status}")
                 
                 with col_b:
-                    st.write(f"**Responsible:** {task.responsible}")
+                    st.write(f"**負責人:** {task.responsible}")
                     if task.start_date and task.end_date:
-                        st.write(f"**Timeline:** {task.start_date.strftime('%Y-%m-%d')} to {task.end_date.strftime('%Y-%m-%d')}")
+                        st.write(f"**時間線:** {task.start_date.strftime('%Y-%m-%d')} 至 {task.end_date.strftime('%Y-%m-%d')}")
                 
                 if task.notes:
-                    st.write(f"**Notes:** {task.notes}")
+                    st.write(f"**備註:** {task.notes}")
 
 def calendar_view(tasks):
-    """Display tasks in a calendar-like view."""
-    st.header("Calendar View")
+    """以日曆形式顯示任務。"""
+    st.header("日曆視圖")
     
-    # Filter to tasks with dates
+    # 篩選有日期的任務
     tasks_with_dates = [task for task in tasks if task.start_date and task.end_date]
     
     if not tasks_with_dates:
-        st.info("No tasks with defined start and end dates available.")
+        st.info("沒有可用的帶有已定義開始和結束日期的任務。")
         return
     
-    # Month view selection
+    # 月份視圖選擇
     today = date.today()
     selected_month = st.selectbox(
-        "Select Month",
+        "選擇月份",
         options=[
             (today.replace(month=((today.month - i - 1) % 12) + 1, year=today.year - ((today.month - i - 1) // 12)))
-            for i in range(-3, 9)  # Show 3 months before and 8 months ahead
+            for i in range(-3, 9)  # 顯示之前3個月和之後8個月
         ],
-        format_func=lambda x: x.strftime("%B %Y"),
-        index=3  # Default to current month
+        format_func=lambda x: x.strftime("%Y年%m月"),
+        index=3  # 默認為當前月份
     )
     
-    # Get the first and last day of selected month
+    # 獲取所選月份的第一天和最後一天
     first_day = selected_month.replace(day=1)
     if selected_month.month == 12:
         last_day = selected_month.replace(year=selected_month.year + 1, month=1, day=1) - timedelta(days=1)
     else:
         last_day = selected_month.replace(month=selected_month.month + 1, day=1) - timedelta(days=1)
     
-    # Filter tasks for the selected month
+    # 篩選所選月份的任務
     month_tasks = []
     for task in tasks_with_dates:
-        # Check if task falls within or overlaps with the selected month
+        # 檢查任務是否在所選月份內或與之重疊
         if (task.start_date <= last_day and 
             (task.end_date >= first_day if task.end_date else True)):
             month_tasks.append(task)
     
     if not month_tasks:
-        st.info(f"No tasks found for {selected_month.strftime('%B %Y')}.")
+        st.info(f"{selected_month.strftime('%Y年%m月')} 沒有找到任務。")
         return
     
-    # Create a timeline view for the selected month
+    # 為所選月份創建時間線視圖
     df_timeline = pd.DataFrame([
         {
-            'Task': task.sub_task,
-            'Start': max(task.start_date, first_day),
-            'End': min(task.end_date, last_day) if task.end_date else last_day,
-            'Status': task.status,
-            'Priority': task.priority,
-            'Main Task': task.main_task
+            '任務': task.sub_task,
+            '開始': max(task.start_date, first_day),
+            '結束': min(task.end_date, last_day) if task.end_date else last_day,
+            '狀態': task.status,
+            '優先級': task.priority,
+            '任務大項': task.main_task
         }
         for task in month_tasks
     ])
     
     fig_timeline = px.timeline(
         df_timeline,
-        x_start='Start',
-        x_end='End',
-        y='Task',
-        color='Status',
-        hover_data=['Priority', 'Main Task'],
-        title=f"Task Calendar - {selected_month.strftime('%B %Y')}"
+        x_start='開始',
+        x_end='結束',
+        y='任務',
+        color='狀態',
+        hover_data=['優先級', '任務大項'],
+        title=f"任務日曆 - {selected_month.strftime('%Y年%m月')}"
     )
     fig_timeline.update_yaxes(autorange="reversed")
     
-    # Add vertical line for today if today is in the selected month
+    # 如果今天在所選月份內，添加一條垂直線表示今天
     if first_day <= today <= last_day:
-        # Convert datetime.date to timestamp for plotly
+        # 將 datetime.date 轉換為 plotly 的時間戳
         today_str = today.strftime('%Y-%m-%d')
         fig_timeline.add_vline(
             x=today_str,
@@ -289,30 +289,30 @@ def calendar_view(tasks):
     
     st.plotly_chart(fig_timeline, use_container_width=True)
     
-    # Daily view
-    st.subheader("Daily Task View")
+    # 每日視圖
+    st.subheader("每日任務視圖")
     
-    # Create a date range for the entire month
+    # 為整個月創建日期範圍
     all_days = [first_day + timedelta(days=i) for i in range((last_day - first_day).days + 1)]
     selected_day = st.select_slider(
-        "Select Day",
+        "選擇日期",
         options=all_days,
         value=today if first_day <= today <= last_day else first_day,
-        format_func=lambda x: x.strftime("%a, %b %d")
+        format_func=lambda x: x.strftime("%m月%d日, %a")
     )
     
-    # Filter tasks for the selected day
+    # 篩選所選日期的任務
     day_tasks = [
         task for task in tasks_with_dates
         if task.start_date <= selected_day <= task.end_date
     ]
     
     if not day_tasks:
-        st.info(f"No tasks for {selected_day.strftime('%A, %B %d')}.")
+        st.info(f"{selected_day.strftime('%m月%d日, %A')} 沒有任務。")
         return
     
-    # Display tasks for the selected day
-    st.write(f"Tasks for {selected_day.strftime('%A, %B %d, %Y')}:")
+    # 顯示所選日期的任務
+    st.write(f"{selected_day.strftime('%Y年%m月%d日, %A')} 的任務：")
     
     for task in day_tasks:
         with st.container(border=True):
@@ -321,19 +321,19 @@ def calendar_view(tasks):
             with col1:
                 st.subheader(task.sub_task)
                 st.caption(f"**{task.main_task}** | {task.status}")
-                st.write(f"**Priority:** {task.priority} | **Responsible:** {task.responsible}")
+                st.write(f"**優先級:** {task.priority} | **負責人:** {task.responsible}")
                 
-                # Calculate days remaining or overdue
+                # 計算剩餘天數或過期天數
                 if task.end_date:
                     if task.end_date >= today:
                         days_left = (task.end_date - today).days
-                        st.write(f"**Due in:** {days_left} days")
+                        st.write(f"**剩餘:** {days_left} 天")
                     else:
                         days_overdue = (today - task.end_date).days
-                        st.write(f"**Overdue by:** {days_overdue} days")
+                        st.write(f"**已過期:** {days_overdue} 天")
             
             with col2:
-                # Show a colored indicator based on status
+                # 根據狀態顯示彩色指示器
                 status_color = {
                     "Not Started": "gray",
                     "In Progress": "blue",
@@ -348,38 +348,38 @@ def calendar_view(tasks):
                 )
 
 def predefined_filters_view(tasks):
-    """Display predefined filter options and results."""
-    st.header("Predefined Filters")
+    """顯示預定義的篩選選項和結果。"""
+    st.header("預設篩選器")
     
     filter_option = st.selectbox(
-        "Select Filter",
+        "選擇篩選器",
         options=[
-            "Recently Completed Tasks (Past Week)",
-            "Upcoming Tasks (Next 3 Weeks)",
-            "Current Year Tasks",
-            "Custom Date Range"
+            "最近完成的任務（過去一週）",
+            "即將到期的任務（未來三週）",
+            "本年度任務",
+            "自定義日期範圍"
         ]
     )
     
     filtered_tasks = []
     
-    if filter_option == "Recently Completed Tasks (Past Week)":
+    if filter_option == "最近完成的任務（過去一週）":
         filtered_tasks = sheets_utils.get_recently_completed_tasks(7)
-        time_description = "completed in the past 7 days"
+        time_description = "在過去7天內完成"
     
-    elif filter_option == "Upcoming Tasks (Next 3 Weeks)":
+    elif filter_option == "即將到期的任務（未來三週）":
         filtered_tasks = sheets_utils.get_upcoming_tasks(21)
-        time_description = "due in the next 3 weeks"
+        time_description = "在未來3週內到期"
     
-    elif filter_option == "Current Year Tasks":
+    elif filter_option == "本年度任務":
         filtered_tasks = sheets_utils.get_current_year_tasks()
         current_year = date.today().year
-        time_description = f"for the year {current_year}"
+        time_description = f"{current_year}年的"
     
-    elif filter_option == "Custom Date Range":
-        # Custom date range selector
+    elif filter_option == "自定義日期範圍":
+        # 自定義日期範圍選擇器
         date_range = st.date_input(
-            "Select Date Range",
+            "選擇日期範圍",
             value=(date.today() - timedelta(days=30), date.today() + timedelta(days=30)),
             key="custom_date_range"
         )
@@ -387,95 +387,95 @@ def predefined_filters_view(tasks):
         if len(date_range) == 2:
             start_date, end_date = date_range
             filtered_tasks = sheets_utils.get_custom_period_tasks(start_date, end_date)
-            time_description = f"between {start_date.strftime('%Y-%m-%d')} and {end_date.strftime('%Y-%m-%d')}"
+            time_description = f"在 {start_date.strftime('%Y-%m-%d')} 和 {end_date.strftime('%Y-%m-%d')} 之間"
         else:
-            st.error("Please select both start and end dates.")
+            st.error("請同時選擇開始和結束日期。")
             return
     
-    # Display results
+    # 顯示結果
     if not filtered_tasks:
-        st.info(f"No tasks {time_description}.")
+        st.info(f"沒有{time_description}的任務。")
         return
     
-    st.subheader(f"Tasks {time_description} ({len(filtered_tasks)} tasks)")
+    st.subheader(f"{time_description}的任務 ({len(filtered_tasks)} 個任務)")
     
-    # Display options
+    # 顯示選項
     view_option = st.radio(
-        "Select View",
-        options=["Table View", "Summary View"],
+        "選擇視圖",
+        options=["表格視圖", "摘要視圖"],
         horizontal=True
     )
     
-    if view_option == "Table View":
+    if view_option == "表格視圖":
         display_table_view(filtered_tasks)
     else:
-        # Summary view with grouping
+        # 帶分組的摘要視圖
         df = sheets_utils.tasks_to_dataframe(filtered_tasks)
         
-        # Group by selected fields
+        # 按選定字段分組
         group_by = st.multiselect(
-            "Group By",
+            "分組依據",
             options=["Main Task", "Status", "Priority", "Responsible"],
             default=["Status"]
         )
         
         if not group_by:
-            st.warning("Please select at least one field to group by.")
+            st.warning("請至少選擇一個分組字段。")
             display_table_view(filtered_tasks)
         else:
-            # Create summary dataframe with counts
+            # 創建帶計數的摘要數據框
             summary = df.groupby(group_by).size().reset_index(name='Count')
             
-            # Display summary table
+            # 顯示摘要表
             st.dataframe(summary, use_container_width=True)
             
-            # Create a visualization based on the grouping
+            # 根據分組創建可視化
             if len(group_by) == 1:
-                # Single dimension grouping - use pie chart
+                # 單維度分組 - 使用餅圖
                 fig = px.pie(
                     summary, 
                     values='Count', 
                     names=group_by[0], 
-                    title=f'Tasks by {group_by[0]}'
+                    title=f'按 {group_by[0]} 分類的任務'
                 )
                 st.plotly_chart(fig, use_container_width=True)
             elif len(group_by) == 2:
-                # Two dimensions - use grouped bar chart
+                # 雙維度 - 使用分組條形圖
                 fig = px.bar(
                     summary, 
                     x=group_by[0], 
                     y='Count', 
                     color=group_by[1],
-                    title=f'Tasks by {group_by[0]} and {group_by[1]}'
+                    title=f'按 {group_by[0]} 和 {group_by[1]} 分類的任務'
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
 def task_statistics_view(tasks, parameters):
-    """Display task statistics and visualizations."""
-    st.header("Task Statistics")
+    """顯示任務統計和視覺化圖表。"""
+    st.header("任務統計")
     
     if not tasks:
-        st.info("No tasks available for analysis.")
+        st.info("沒有可分析的任務。")
         return
     
-    # Basic statistics
+    # 基本統計
     total_tasks = len(tasks)
     completed_tasks = sum(1 for task in tasks if task.status == "Completed")
     completion_rate = (completed_tasks / total_tasks) * 100 if total_tasks > 0 else 0
     
-    # Create a summary box
+    # 創建摘要框
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Total Tasks", total_tasks)
+        st.metric("總任務數", total_tasks)
     
     with col2:
-        st.metric("Completed Tasks", completed_tasks)
+        st.metric("已完成任務", completed_tasks)
     
     with col3:
-        st.metric("Completion Rate", f"{completion_rate:.1f}%")
+        st.metric("完成率", f"{completion_rate:.1f}%")
     
-    # Tasks by status
+    # 按狀態分類的任務
     status_counts = {}
     for task in tasks:
         if task.status in status_counts:
@@ -483,7 +483,7 @@ def task_statistics_view(tasks, parameters):
         else:
             status_counts[task.status] = 1
     
-    # Tasks by priority
+    # 按優先級分類的任務
     priority_counts = {}
     for task in tasks:
         if task.priority in priority_counts:
@@ -491,7 +491,7 @@ def task_statistics_view(tasks, parameters):
         else:
             priority_counts[task.priority] = 1
     
-    # Tasks by responsible person
+    # 按負責人分類的任務
     responsible_counts = {}
     for task in tasks:
         if task.responsible in responsible_counts:
@@ -499,91 +499,91 @@ def task_statistics_view(tasks, parameters):
         else:
             responsible_counts[task.responsible] = 1
     
-    # Display visualizations
+    # 顯示視覺化圖表
     col1, col2 = st.columns(2)
     
     with col1:
-        # Status distribution
+        # 狀態分佈
         df_status = pd.DataFrame({
-            'Status': list(status_counts.keys()),
-            'Count': list(status_counts.values())
+            '狀態': list(status_counts.keys()),
+            '數量': list(status_counts.values())
         })
         
         fig_status = px.bar(
             df_status,
-            x='Status',
-            y='Count',
-            title='Tasks by Status',
-            color='Status'
+            x='狀態',
+            y='數量',
+            title='按狀態分類的任務',
+            color='狀態'
         )
         st.plotly_chart(fig_status, use_container_width=True)
         
-        # Responsible distribution
+        # 負責人分佈
         df_responsible = pd.DataFrame({
-            'Responsible': list(responsible_counts.keys()),
-            'Count': list(responsible_counts.values())
+            '負責人': list(responsible_counts.keys()),
+            '數量': list(responsible_counts.values())
         })
         
         fig_responsible = px.bar(
             df_responsible,
-            x='Responsible',
-            y='Count',
-            title='Tasks by Responsible Person',
-            color='Responsible'
+            x='負責人',
+            y='數量',
+            title='按負責人分類的任務',
+            color='負責人'
         )
         st.plotly_chart(fig_responsible, use_container_width=True)
     
     with col2:
-        # Priority distribution
+        # 優先級分佈
         df_priority = pd.DataFrame({
-            'Priority': list(priority_counts.keys()),
-            'Count': list(priority_counts.values())
+            '優先級': list(priority_counts.keys()),
+            '數量': list(priority_counts.values())
         })
         
         fig_priority = px.bar(
             df_priority,
-            x='Priority',
-            y='Count',
-            title='Tasks by Priority',
-            color='Priority'
+            x='優先級',
+            y='數量',
+            title='按優先級分類的任務',
+            color='優先級'
         )
         st.plotly_chart(fig_priority, use_container_width=True)
         
-        # Completion rate over time (if there are enough tasks with dates)
+        # 隨時間的完成率（如果有足夠的帶日期的任務）
         tasks_with_updates = [task for task in tasks if task.status_update_time]
         
         if tasks_with_updates:
-            # Group tasks by week
+            # 按週分組任務
             df_tasks = pd.DataFrame([
                 {
-                    'Date': task.status_update_time,
-                    'Status': task.status
+                    '日期': task.status_update_time,
+                    '狀態': task.status
                 }
                 for task in tasks_with_updates
             ])
             
-            # Add a week column
-            df_tasks['Week'] = df_tasks['Date'].dt.strftime('%Y-%U')
-            df_tasks['IsCompleted'] = df_tasks['Status'] == 'Completed'
+            # 添加週列
+            df_tasks['週'] = df_tasks['日期'].dt.strftime('%Y-%U')
+            df_tasks['已完成'] = df_tasks['狀態'] == 'Completed'
             
-            # Group by week and count completed vs. total
-            weekly_stats = df_tasks.groupby('Week').agg(
-                Completed=('IsCompleted', 'sum'),
-                Total=('IsCompleted', 'count')
+            # 按週分組並計算已完成與總數
+            weekly_stats = df_tasks.groupby('週').agg(
+                已完成=('已完成', 'sum'),
+                總數=('已完成', 'count')
             ).reset_index()
             
-            # Calculate completion rate
-            weekly_stats['CompletionRate'] = (weekly_stats['Completed'] / weekly_stats['Total']) * 100
+            # 計算完成率
+            weekly_stats['完成率'] = (weekly_stats['已完成'] / weekly_stats['總數']) * 100
             
-            # Create line chart
+            # 創建折線圖
             fig_completion = px.line(
                 weekly_stats,
-                x='Week',
-                y='CompletionRate',
-                title='Weekly Task Completion Rate',
+                x='週',
+                y='完成率',
+                title='每週任務完成率',
                 markers=True
             )
-            fig_completion.update_layout(yaxis_title='Completion Rate (%)')
+            fig_completion.update_layout(yaxis_title='完成率 (%)')
             st.plotly_chart(fig_completion, use_container_width=True)
 
 if __name__ == "__main__":
