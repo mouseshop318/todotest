@@ -401,12 +401,12 @@ def display_tasks(tasks, parameters):
                     st.rerun()
 
 def show_edit_task_form(task, parameters):
-    """在彈窗中顯示編輯任務表單。"""
+    """顯示編輯任務表單。"""
     st.session_state.show_edit_form = True
     st.session_state.editing_task = task
     
-    # 使用 st.dialog 創建彈窗效果
-    with st.dialog("編輯任務"):
+    st.subheader("編輯任務")
+    with st.form("edit_task_form"):
         st.header("編輯任務")
         
         with st.form(key="edit_task_form"):
@@ -495,11 +495,11 @@ def show_edit_task_form(task, parameters):
                 st.rerun()
 
 def show_add_task_form(parameters):
-    """在彈窗中顯示新增任務表單。"""
+    """顯示新增任務表單。"""
     st.session_state.show_add_form = True
     
-    # 使用 st.dialog 創建彈窗效果
-    with st.dialog("新增任務"):
+    st.subheader("新增任務")
+    with st.form("add_task_form"):
         st.header("新增任務")
         
         with st.form(key="add_task_form"):
