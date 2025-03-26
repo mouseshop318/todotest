@@ -120,36 +120,57 @@ def display_tasks(tasks, parameters):
         st.info("沒有符合篩選條件的任務。")
         return
     
-    # 顯示帶有編輯和刪除按鈕的任務
-    for index, row in filtered_df.iterrows():
-        with st.container():
-            col1, col2, col3 = st.columns([3, 1, 0.5])
-            
-            with col1:
-                task_title = f"**{row['Sub Task']}** ({row['Main Task']})"
-                st.markdown(task_title)
-                
-                details = (
-                    f"**優先級:** {row['Priority']} | "
-                    f"**狀態:** {row['Status']} | "
-                    f"**負責人:** {row['Responsible']}"
-                )
-                st.markdown(details)
-                
-                if row['Start Date'] and row['End Date']:
-                    dates = f"**時間線:** {row['Start Date'].strftime('%Y-%m-%d')} 至 {row['End Date'].strftime('%Y-%m-%d')}"
-                    st.markdown(dates)
-                
-                if row['Notes']:
-                    st.markdown(f"**備註:** {row['Notes']}")
-            
-            with col2:
-                st.button("編輯", key=f"edit_{row['ID']}", on_click=set_task_for_edit, args=(row['ID'],))
-            
-            with col3:
-                st.button("🗑️", key=f"delete_{row['ID']}", on_click=delete_task, args=(row['ID'],))
-            
-            st.divider()
+    # 預處理數據以便表格顯示
+    display_df = filtered_df.copy()
+    
+    # 格式化日期列
+    if 'Start Date' in display_df.columns:
+        display_df['Start Date'] = display_df['Start Date'].apply(
+            lambda x: x.strftime('%Y-%m-%d') if pd.notna(x) else ''
+        )
+    
+    if 'End Date' in display_df.columns:
+        display_df['End Date'] = display_df['End Date'].apply(
+            lambda x: x.strftime('%Y-%m-%d') if pd.notna(x) else ''
+        )
+    
+    # 創建任務操作的按鈕
+    # 首先創建編輯和刪除的功能性按鈕
+    edit_buttons = {}
+    delete_buttons = {}
+    
+    # 表格顯示列
+    display_columns = [
+        'Sub Task', 'Main Task', 'Priority', 'Status', 
+        'Start Date', 'End Date', 'Responsible', 'Notes'
+    ]
+    
+    # 顯示表格
+    st.dataframe(display_df[display_columns], use_container_width=True)
+    
+    # 任務操作區域
+    st.subheader("任務操作")
+    
+    # 選擇要操作的任務
+    task_options = {f"{task.sub_task} ({task.main_task})": task.id for task in filtered_tasks}
+    selected_task = st.selectbox(
+        "選擇要編輯或刪除的任務",
+        options=list(task_options.keys())
+    )
+    
+    if selected_task:
+        selected_task_id = task_options[selected_task]
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("編輯選定的任務", key="edit_selected"):
+                set_task_for_edit(selected_task_id)
+                st.rerun()
+        
+        with col2:
+            if st.button("刪除選定的任務", key="delete_selected"):
+                delete_task(selected_task_id)
+                st.rerun()
 
 def set_task_for_edit(task_id):
     """設置要編輯的任務在 session state 中。"""

@@ -277,10 +277,10 @@ def calendar_view(tasks):
     
     # 如果今天在所選月份內，添加一條垂直線表示今天
     if first_day <= today <= last_day:
-        # 將 datetime.date 轉換為 plotly 的時間戳
-        today_str = today.strftime('%Y-%m-%d')
+        # 轉換為時間戳，確保是數值格式而非字符串
+        today_timestamp = pd.Timestamp(today).timestamp() * 1000  # 轉換為毫秒時間戳
         fig_timeline.add_vline(
-            x=today_str,
+            x=today_timestamp,
             line_width=2,
             line_dash="dash",
             line_color="green",
