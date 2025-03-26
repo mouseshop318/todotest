@@ -6,7 +6,8 @@ WORKDIR /app
 COPY . .
 
 # 安裝依賴
-RUN pip install --no-cache-dir -r requirements.txt
+COPY dependencies.txt .
+RUN pip install --no-cache-dir -r dependencies.txt
 
 # 創建必要的目錄結構
 RUN mkdir -p .streamlit
