@@ -9,7 +9,12 @@ st.set_page_config(
     page_title="智能待辦事項管理系統",
     page_icon="✅",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/mouseshop318/todotest',
+        'Report a bug': 'https://github.com/mouseshop318/todotest/issues',
+        'About': '# 智能待辦事項管理系統\n By mouseshop318'
+    }
 )
 
 def main():
