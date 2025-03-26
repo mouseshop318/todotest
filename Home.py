@@ -420,8 +420,8 @@ def show_edit_task_form(task, parameters):
                 "開始日期",
                 value=task.start_date if task.start_date else date.today()
             )
-                
-                end_date = st.date_input(
+            
+            end_date = st.date_input(
                 "結束日期",
                 value=task.end_date if task.end_date else date.today()
             )
@@ -503,11 +503,11 @@ def show_add_task_form(parameters):
         
         with col2:
             start_date = st.date_input(
-                    "開始日期",
-                    value=date.today()
-                )
-                
-                end_date = st.date_input(
+                "開始日期",
+                value=date.today()
+            )
+            
+            end_date = st.date_input(
                 "結束日期",
                 value=date.today()
             )
