@@ -389,9 +389,9 @@ def show_edit_task_form(task, parameters):
     st.subheader("編輯任務")
     with st.form("edit_task_form"):
         st.header("編輯任務")
-            col1, col2 = st.columns(2)
-            
-            with col1:
+        col1, col2 = st.columns(2)
+        
+        with col1:
                 sub_task = st.text_input(
                     "任務子項", 
                     value=task.sub_task
@@ -480,9 +480,9 @@ def show_add_task_form(parameters):
     st.subheader("新增任務")
     with st.form("add_task_form"):
         st.header("新增任務")
-            col1, col2 = st.columns(2)
-            
-            with col1:
+        col1, col2 = st.columns(2)
+        
+        with col1:
                 sub_task = st.text_input("任務子項")
                 
                 main_task = st.selectbox(
