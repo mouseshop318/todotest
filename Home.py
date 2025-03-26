@@ -6,21 +6,21 @@ from models import Task
 import sheets_utils
 
 st.set_page_config(
-    page_title="To-Do Management System",
+    page_title="智能待辦事項管理系統",
     page_icon="✅",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 def main():
-    st.title("Intelligent To-Do Management System")
+    st.title("智能待辦事項管理系統")
     
-    # Load data
+    # 載入數據
     tasks = sheets_utils.get_active_tasks()
     parameters = sheets_utils.load_parameters()
     
-    # Create tabs
-    tab1, tab2, tab3 = st.tabs(["Tasks", "Add/Edit Task", "Task Overview"])
+    # 創建頁籤
+    tab1, tab2, tab3 = st.tabs(["任務列表", "新增/編輯任務", "任務概覽"])
     
     with tab1:
         display_tasks(tasks, parameters)

@@ -277,12 +277,14 @@ def calendar_view(tasks):
     
     # Add vertical line for today if today is in the selected month
     if first_day <= today <= last_day:
+        # Convert datetime.date to timestamp for plotly
+        today_str = today.strftime('%Y-%m-%d')
         fig_timeline.add_vline(
-            x=today,
+            x=today_str,
             line_width=2,
             line_dash="dash",
             line_color="green",
-            annotation_text="Today"
+            annotation_text="今天"
         )
     
     st.plotly_chart(fig_timeline, use_container_width=True)

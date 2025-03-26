@@ -1,0 +1,27 @@
+{
+  "status": [
+    "\u672a\u958b\u59cb",
+    "\u9032\u884c\u4e2d",
+    "\u5df2\u5b8c\u6210",
+    "\u66ab\u505c"
+  ],
+  "priority": [
+    "\u4f4e",
+    "\u4e2d",
+    "\u9ad8",
+    "\u7dca\u6025"
+  ],
+  "responsible": [
+    "\u5f35\u5c0f\u660e",
+    "\u674e\u5927\u5049",
+    "\u738b\u5c0f\u7d05",
+    "\u9673\u7f8e\u73b2"
+  ],
+  "main_task": [
+    "\u7db2\u7ad9\u958b\u767c",
+    "\u5e02\u5834\u71df\u92b7",
+    "\u7cfb\u7d71\u7dad\u8b77",
+    "\u7814\u7a76",
+    "\u5ba2\u6236\u652f\u6301"
+  ]
+}
