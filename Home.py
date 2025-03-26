@@ -392,34 +392,34 @@ def show_edit_task_form(task, parameters):
         col1, col2 = st.columns(2)
         
         with col1:
-                sub_task = st.text_input(
-                    "任務子項", 
-                    value=task.sub_task
-                )
-                
-                main_task = st.selectbox(
-                    "任務大項", 
-                    options=parameters["main_task"],
-                    index=parameters["main_task"].index(task.main_task) if task.main_task in parameters["main_task"] else 0
-                )
-                
-                priority = st.selectbox(
-                    "優先級", 
-                    options=parameters["priority"],
-                    index=parameters["priority"].index(task.priority) if task.priority in parameters["priority"] else 1
-                )
-                
-                status = st.selectbox(
-                    "狀態", 
-                    options=parameters["status"],
-                    index=parameters["status"].index(task.status) if task.status in parameters["status"] else 0
-                )
+            sub_task = st.text_input(
+                "任務子項", 
+                value=task.sub_task
+            )
             
-            with col2:
-                start_date = st.date_input(
-                    "開始日期",
-                    value=task.start_date if task.start_date else date.today()
-                )
+            main_task = st.selectbox(
+                "任務大項", 
+                options=parameters["main_task"],
+                index=parameters["main_task"].index(task.main_task) if task.main_task in parameters["main_task"] else 0
+            )
+            
+            priority = st.selectbox(
+                "優先級", 
+                options=parameters["priority"],
+                index=parameters["priority"].index(task.priority) if task.priority in parameters["priority"] else 1
+            )
+            
+            status = st.selectbox(
+                "狀態", 
+                options=parameters["status"],
+                index=parameters["status"].index(task.status) if task.status in parameters["status"] else 0
+            )
+        
+        with col2:
+            start_date = st.date_input(
+                "開始日期",
+                value=task.start_date if task.start_date else date.today()
+            )
                 
                 end_date = st.date_input(
                     "結束日期",
@@ -483,26 +483,26 @@ def show_add_task_form(parameters):
         col1, col2 = st.columns(2)
         
         with col1:
-                sub_task = st.text_input("任務子項")
-                
-                main_task = st.selectbox(
-                    "任務大項", 
-                    options=parameters["main_task"]
-                )
-                
-                priority = st.selectbox(
-                    "優先級", 
-                    options=parameters["priority"],
-                    index=1  # 默認為中優先級
-                )
-                
-                status = st.selectbox(
-                    "狀態", 
-                    options=parameters["status"]
-                )
+            sub_task = st.text_input("任務子項")
             
-            with col2:
-                start_date = st.date_input(
+            main_task = st.selectbox(
+                "任務大項", 
+                options=parameters["main_task"]
+            )
+            
+            priority = st.selectbox(
+                "優先級", 
+                options=parameters["priority"],
+                index=1  # 默認為中優先級
+            )
+            
+            status = st.selectbox(
+                "狀態", 
+                options=parameters["status"]
+            )
+        
+        with col2:
+            start_date = st.date_input(
                     "開始日期",
                     value=date.today()
                 )
