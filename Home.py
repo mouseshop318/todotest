@@ -41,19 +41,143 @@ def main():
         else:
             st.session_state.theme = 'dark'
     
-    # 根據主題設定背景色和文字色
+    # 根據主題設定全局樣式
     if st.session_state.theme == 'dark':
         st.markdown("""
         <style>
+        /* 全局背景和文字 */
         .stApp {
-            background-color: #1e1e1e;
-            color: #ffffff;
+            background-color: #121212;
+            color: #E0E0E0;
         }
+        
+        /* 側邊欄 */
+        .css-1d391kg {
+            background-color: #1E1E1E;
+        }
+        
+        /* 頁籤 */
         .stTabs [data-baseweb="tab-list"] {
-            background-color: #2d2d2d;
+            background-color: #1E1E1E;
+            border-radius: 4px;
         }
         .stTabs [data-baseweb="tab"] {
-            color: #ffffff;
+            color: #E0E0E0;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #333333;
+            color: #FFFFFF;
+        }
+        
+        /* 按鈕 */
+        .stButton>button {
+            background-color: #333333;
+            color: #FFFFFF;
+            border: 1px solid #555555;
+        }
+        .stButton>button:hover {
+            background-color: #555555;
+            color: #FFFFFF;
+        }
+        
+        /* 輸入框 */
+        div[data-baseweb="base-input"] {
+            background-color: #2D2D2D;
+            border-color: #555555;
+        }
+        div[data-baseweb="base-input"] input {
+            color: #E0E0E0;
+        }
+        
+        /* 選擇框 */
+        div[data-baseweb="select"] {
+            background-color: #2D2D2D;
+            border-color: #555555;
+        }
+        div[data-baseweb="select"] span {
+            color: #E0E0E0;
+        }
+        
+        /* 表格 */
+        .stDataFrame {
+            background-color: #1E1E1E;
+        }
+        .stDataFrame th {
+            background-color: #2D2D2D;
+            color: #FFFFFF;
+        }
+        .stDataFrame td {
+            background-color: #1E1E1E;
+            color: #E0E0E0;
+        }
+        
+        /* 卡片容器 */
+        div[data-testid="stExpander"] {
+            background-color: #2D2D2D;
+            border-color: #555555;
+        }
+        
+        /* 特殊元素 */
+        .stProgress > div > div {
+            background-color: #4CAF50;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        # 淺色主題樣式優化
+        st.markdown("""
+        <style>
+        /* 全局背景和文字 */
+        .stApp {
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        
+        /* 側邊欄 */
+        .css-1d391kg {
+            background-color: #FFFFFF;
+        }
+        
+        /* 頁籤 */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #F0F2F5;
+            border-radius: 4px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #212529;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #E9ECEF;
+            color: #0366D6;
+        }
+        
+        /* 按鈕 */
+        .stButton>button {
+            background-color: #FFFFFF;
+            color: #0366D6;
+            border: 1px solid #DEE2E6;
+        }
+        .stButton>button:hover {
+            background-color: #F0F2F5;
+            color: #0366D6;
+        }
+        
+        /* 表格 */
+        .stDataFrame th {
+            background-color: #F0F2F5;
+        }
+        .stDataFrame td {
+            background-color: #FFFFFF;
+        }
+        
+        /* 卡片容器 */
+        div[data-testid="stExpander"] {
+            border-color: #DEE2E6;
+        }
+        
+        /* 特殊元素 */
+        .stProgress > div > div {
+            background-color: #0366D6;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -188,11 +312,16 @@ def display_tasks(tasks, parameters):
             lambda x: x.strftime('%Y-%m-%d') if pd.notna(x) else ''
         )
     
-    # 創建一個字典將ID映射到索引
-    id_to_index = {task.id: i for i, task in enumerate(filtered_tasks)}
+    # 準備操作按鈕
+    actions = []
+    for task in filtered_tasks:
+        # 為每個任務創建HTML格式的按鈕
+        edit_btn = f'<a href="#" id="edit_{task.id}" style="text-decoration:none; margin-right:10px;">🖊️</a>'
+        delete_btn = f'<a href="#" id="delete_{task.id}" style="text-decoration:none; color:red;">🗑️</a>'
+        actions.append(f"{edit_btn} {delete_btn}")
     
-    # 添加操作列，包含編輯和刪除按鈕
-    display_df['操作'] = ''
+    # 添加操作列
+    display_df['操作'] = actions
     
     # 顯示表格
     display_columns = [
@@ -200,7 +329,7 @@ def display_tasks(tasks, parameters):
         'Start Date', 'End Date', 'Responsible', 'Notes', '操作'
     ]
     
-    # 使用 st.data_editor 代替 st.dataframe，以支持直接在表格中的操作
+    # 使用 st.data_editor 顯示表格
     edited_df = st.data_editor(
         display_df[display_columns],
         use_container_width=True,
@@ -209,21 +338,66 @@ def display_tasks(tasks, parameters):
                 "操作",
                 width="small",
                 help="點擊按鈕進行操作"
+            ),
+            "Sub Task": st.column_config.TextColumn(
+                "任務子項",
+                width="large"
+            ),
+            "Main Task": st.column_config.TextColumn(
+                "任務大項",
+                width="medium"
+            ),
+            "Priority": st.column_config.TextColumn(
+                "優先級",
+                width="small"
+            ),
+            "Status": st.column_config.TextColumn(
+                "狀態",
+                width="small"
+            ),
+            "Start Date": st.column_config.TextColumn(
+                "開始日期",
+                width="small"
+            ),
+            "End Date": st.column_config.TextColumn(
+                "結束日期",
+                width="small"
+            ),
+            "Responsible": st.column_config.TextColumn(
+                "負責人",
+                width="small"
+            ),
+            "Notes": st.column_config.TextColumn(
+                "備註",
+                width="medium"
             )
         },
-        disabled=display_columns[:-1],  # 除了操作列外，其他列都禁用編輯
         hide_index=True
     )
     
-    # 為每個任務創建操作按鈕
-    for task in filtered_tasks:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🖊️ 編輯", key=f"edit_{task.id}"):
-                show_edit_task_form(task, parameters)
+    # 在表格下方放置操作按鈕，這樣用戶可以更方便地點擊
+    st.subheader("任務操作")
+    
+    # 建立操作列
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        selected_task_id = st.selectbox(
+            "選擇要操作的任務", 
+            options=[task.id for task in filtered_tasks],
+            format_func=lambda x: next((t.sub_task for t in filtered_tasks if t.id == x), "")
+        )
+    
+    selected_task = next((t for t in filtered_tasks if t.id == selected_task_id), None)
+    
+    if selected_task:
         with col2:
-            if st.button("🗑️ 刪除", key=f"delete_{task.id}"):
-                if delete_task(task.id):
+            if st.button("🖊️ 編輯選定的任務", key=f"edit_btn_{selected_task_id}"):
+                show_edit_task_form(selected_task, parameters)
+        
+        with col3:
+            if st.button("🗑️ 刪除選定的任務", key=f"delete_btn_{selected_task_id}"):
+                if delete_task(selected_task_id):
                     st.rerun()
 
 def show_edit_task_form(task, parameters):
