@@ -422,16 +422,16 @@ def show_edit_task_form(task, parameters):
             )
                 
                 end_date = st.date_input(
-                    "結束日期",
-                    value=task.end_date if task.end_date else date.today()
-                )
-                
-                responsible = st.selectbox(
-                    "負責人", 
-                    options=parameters["responsible"],
-                    index=parameters["responsible"].index(task.responsible) if task.responsible in parameters["responsible"] else 0
-                )
+                "結束日期",
+                value=task.end_date if task.end_date else date.today()
+            )
             
+            responsible = st.selectbox(
+                "負責人", 
+                options=parameters["responsible"],
+                index=parameters["responsible"].index(task.responsible) if task.responsible in parameters["responsible"] else 0
+            )
+        
             notes = st.text_area(
                 "備註",
                 value=task.notes
@@ -508,15 +508,15 @@ def show_add_task_form(parameters):
                 )
                 
                 end_date = st.date_input(
-                    "結束日期",
-                    value=date.today()
-                )
-                
-                responsible = st.selectbox(
-                    "負責人", 
-                    options=parameters["responsible"]
-                )
+                "結束日期",
+                value=date.today()
+            )
             
+            responsible = st.selectbox(
+                "負責人", 
+                options=parameters["responsible"]
+            )
+        
             notes = st.text_area("備註")
             
             col1, col2 = st.columns(2)
