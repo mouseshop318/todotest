@@ -174,12 +174,14 @@ def display_table_view(tasks):
     
     # 導出選項
     if st.button("導出為CSV"):
-        csv = df.to_csv(index=False).encode('utf-8')
+        # 使用 BOM 標記確保 Excel 能正確識別 UTF-8 編碼
+        csv = df.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
             label="下載CSV",
             data=csv,
             file_name="任務導出.csv",
-            mime="text/csv"
+            mime="text/csv",
+            help="下載包含所有任務資料的 CSV 檔案，支援中文字符"
         )
 
 def display_card_view(tasks):

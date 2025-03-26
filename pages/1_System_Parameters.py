@@ -86,7 +86,71 @@ def manage_parameter_list(title, param_list, param_key):
     
     # 重新排序參數
     st.subheader("重新排序選項")
-    st.write("拖放以更改順序（即將推出）")
+    
+    # 轉換為可編輯的列表（顯示編號）
+    df_params = pd.DataFrame({
+        "序號": list(range(1, len(param_list) + 1)),
+        "選項值": param_list
+    })
+    
+    # 使用 st.data_editor 允許行拖放排序
+    edited_df = st.data_editor(
+        df_params,
+        use_container_width=True,
+        column_config={
+            "序號": st.column_config.NumberColumn(
+                "序號",
+                help="拖動序號更改排序",
+                width="small"
+            ),
+            "選項值": st.column_config.TextColumn(
+                "選項值",
+                width="medium"
+            )
+        },
+        disabled=["選項值"],
+        hide_index=True,
+        num_rows="fixed"
+    )
+    
+    # 檢查是否有更改順序
+    if not df_params.equals(edited_df):
+        # 獲取排序後的參數列表
+        sorted_params = edited_df.sort_values("序號")["選項值"].tolist()
+        
+        # 向上/向下移動按鈕
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_param = st.selectbox(
+                "選擇要移動的選項",
+                options=param_list,
+                key=f"move_{param_key}"
+            )
+        
+        with col2:
+            col_up, col_down = st.columns(2)
+            with col_up:
+                if st.button("⬆️ 上移", key=f"up_{param_key}"):
+                    idx = param_list.index(selected_param)
+                    if idx > 0:
+                        param_list[idx], param_list[idx-1] = param_list[idx-1], param_list[idx]
+                        st.success(f"已上移: {selected_param}")
+                        st.rerun()
+            
+            with col_down:
+                if st.button("⬇️ 下移", key=f"down_{param_key}"):
+                    idx = param_list.index(selected_param)
+                    if idx < len(param_list) - 1:
+                        param_list[idx], param_list[idx+1] = param_list[idx+1], param_list[idx]
+                        st.success(f"已下移: {selected_param}")
+                        st.rerun()
+        
+        # 應用自定義排序按鈕
+        if st.button("套用排序", key=f"apply_{param_key}"):
+            param_list.clear()
+            param_list.extend(sorted_params)
+            st.success("已套用新排序！")
+            st.rerun()
     
     return param_list
 

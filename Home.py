@@ -27,6 +27,37 @@ st.set_page_config(
 )
 
 def main():
+    # 設置主題
+    if 'theme' not in st.session_state:
+        st.session_state.theme = 'light'
+    
+    # 主題切換
+    with st.sidebar:
+        theme = st.radio("主題設置", ["淺色主題", "深色主題"], 
+                         index=0 if st.session_state.theme == 'light' else 1,
+                         horizontal=True)
+        if theme == "淺色主題":
+            st.session_state.theme = 'light'
+        else:
+            st.session_state.theme = 'dark'
+    
+    # 根據主題設定背景色和文字色
+    if st.session_state.theme == 'dark':
+        st.markdown("""
+        <style>
+        .stApp {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #2d2d2d;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #ffffff;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    
     st.title("智能待辦事項管理系統")
     
     # 載入數據
@@ -34,20 +65,29 @@ def main():
     parameters = sheets_utils.load_parameters()
     
     # 創建頁籤
-    tab1, tab2, tab3 = st.tabs(["任務列表", "新增/編輯任務", "任務概覽"])
+    tab1, tab2 = st.tabs(["任務列表", "任務概覽"])
     
     with tab1:
         display_tasks(tasks, parameters)
     
     with tab2:
-        add_edit_task(parameters)
-    
-    with tab3:
         task_overview(tasks)
+        
+    # 處理彈窗狀態
+    if 'show_edit_form' in st.session_state and st.session_state.show_edit_form:
+        show_edit_task_form(st.session_state.editing_task, parameters)
+    
+    if 'show_add_form' in st.session_state and st.session_state.show_add_form:
+        show_add_task_form(parameters)
 
 def display_tasks(tasks, parameters):
     """顯示和管理現有任務。"""
     st.header("任務列表")
+    
+    # 新增任務按鈕放在頂部
+    if st.button("➕ 新增任務", key="add_new_task_button", type="primary"):
+        show_add_task_form(parameters)
+        return
     
     if not tasks:
         st.info("目前沒有可用的任務。請新增一個任務開始使用。")
@@ -148,42 +188,217 @@ def display_tasks(tasks, parameters):
             lambda x: x.strftime('%Y-%m-%d') if pd.notna(x) else ''
         )
     
-    # 創建任務操作的按鈕
-    # 首先創建編輯和刪除的功能性按鈕
-    edit_buttons = {}
-    delete_buttons = {}
+    # 創建一個字典將ID映射到索引
+    id_to_index = {task.id: i for i, task in enumerate(filtered_tasks)}
     
-    # 表格顯示列
-    display_columns = [
-        'Sub Task', 'Main Task', 'Priority', 'Status', 
-        'Start Date', 'End Date', 'Responsible', 'Notes'
-    ]
+    # 添加操作列，包含編輯和刪除按鈕
+    display_df['操作'] = ''
     
     # 顯示表格
-    st.dataframe(display_df[display_columns], use_container_width=True)
+    display_columns = [
+        'Sub Task', 'Main Task', 'Priority', 'Status', 
+        'Start Date', 'End Date', 'Responsible', 'Notes', '操作'
+    ]
     
-    # 任務操作區域
-    st.subheader("任務操作")
-    
-    # 選擇要操作的任務
-    task_options = {f"{task.sub_task} ({task.main_task})": task.id for task in filtered_tasks}
-    selected_task = st.selectbox(
-        "選擇要編輯或刪除的任務",
-        options=list(task_options.keys())
+    # 使用 st.data_editor 代替 st.dataframe，以支持直接在表格中的操作
+    edited_df = st.data_editor(
+        display_df[display_columns],
+        use_container_width=True,
+        column_config={
+            "操作": st.column_config.Column(
+                "操作",
+                width="small",
+                help="點擊按鈕進行操作"
+            )
+        },
+        disabled=display_columns[:-1],  # 除了操作列外，其他列都禁用編輯
+        hide_index=True
     )
     
-    if selected_task:
-        selected_task_id = task_options[selected_task]
+    # 為每個任務創建操作按鈕
+    for task in filtered_tasks:
         col1, col2 = st.columns(2)
-        
         with col1:
-            if st.button("編輯選定的任務", key="edit_selected"):
-                set_task_for_edit(selected_task_id)
-                st.rerun()
-        
+            if st.button("🖊️ 編輯", key=f"edit_{task.id}"):
+                show_edit_task_form(task, parameters)
         with col2:
-            if st.button("刪除選定的任務", key="delete_selected"):
-                delete_task(selected_task_id)
+            if st.button("🗑️ 刪除", key=f"delete_{task.id}"):
+                if delete_task(task.id):
+                    st.rerun()
+
+def show_edit_task_form(task, parameters):
+    """在彈窗中顯示編輯任務表單。"""
+    st.session_state.show_edit_form = True
+    st.session_state.editing_task = task
+    
+    # 使用 st.dialog 創建彈窗效果
+    with st.dialog("編輯任務"):
+        st.header("編輯任務")
+        
+        with st.form(key="edit_task_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                sub_task = st.text_input(
+                    "任務子項", 
+                    value=task.sub_task
+                )
+                
+                main_task = st.selectbox(
+                    "任務大項", 
+                    options=parameters["main_task"],
+                    index=parameters["main_task"].index(task.main_task) if task.main_task in parameters["main_task"] else 0
+                )
+                
+                priority = st.selectbox(
+                    "優先級", 
+                    options=parameters["priority"],
+                    index=parameters["priority"].index(task.priority) if task.priority in parameters["priority"] else 1
+                )
+                
+                status = st.selectbox(
+                    "狀態", 
+                    options=parameters["status"],
+                    index=parameters["status"].index(task.status) if task.status in parameters["status"] else 0
+                )
+            
+            with col2:
+                start_date = st.date_input(
+                    "開始日期",
+                    value=task.start_date if task.start_date else date.today()
+                )
+                
+                end_date = st.date_input(
+                    "結束日期",
+                    value=task.end_date if task.end_date else date.today()
+                )
+                
+                responsible = st.selectbox(
+                    "負責人", 
+                    options=parameters["responsible"],
+                    index=parameters["responsible"].index(task.responsible) if task.responsible in parameters["responsible"] else 0
+                )
+            
+            notes = st.text_area(
+                "備註",
+                value=task.notes
+            )
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                submitted = st.form_submit_button("更新任務")
+            with col2:
+                canceled = st.form_submit_button("取消")
+            
+            if submitted:
+                if not sub_task:
+                    st.error("任務子項不能為空！")
+                else:
+                    if end_date < start_date:
+                        st.error("結束日期必須在開始日期當天或之後！")
+                    else:
+                        # 更新現有任務
+                        updated_task = Task(
+                            id=task.id,
+                            sub_task=sub_task,
+                            main_task=main_task,
+                            priority=priority,
+                            status=status,
+                            start_date=start_date,
+                            end_date=end_date,
+                            responsible=responsible,
+                            notes=notes,
+                            status_update_time=datetime.now(),
+                            is_deleted=False
+                        )
+                        sheets_utils.update_task(task.id, updated_task)
+                        st.session_state.show_edit_form = False
+                        st.success("任務更新成功！")
+                        st.rerun()
+            
+            if canceled:
+                st.session_state.show_edit_form = False
+                st.rerun()
+
+def show_add_task_form(parameters):
+    """在彈窗中顯示新增任務表單。"""
+    st.session_state.show_add_form = True
+    
+    # 使用 st.dialog 創建彈窗效果
+    with st.dialog("新增任務"):
+        st.header("新增任務")
+        
+        with st.form(key="add_task_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                sub_task = st.text_input("任務子項")
+                
+                main_task = st.selectbox(
+                    "任務大項", 
+                    options=parameters["main_task"]
+                )
+                
+                priority = st.selectbox(
+                    "優先級", 
+                    options=parameters["priority"],
+                    index=1  # 默認為中優先級
+                )
+                
+                status = st.selectbox(
+                    "狀態", 
+                    options=parameters["status"]
+                )
+            
+            with col2:
+                start_date = st.date_input(
+                    "開始日期",
+                    value=date.today()
+                )
+                
+                end_date = st.date_input(
+                    "結束日期",
+                    value=date.today()
+                )
+                
+                responsible = st.selectbox(
+                    "負責人", 
+                    options=parameters["responsible"]
+                )
+            
+            notes = st.text_area("備註")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                submitted = st.form_submit_button("新增任務")
+            with col2:
+                canceled = st.form_submit_button("取消")
+            
+            if submitted:
+                if not sub_task:
+                    st.error("任務子項不能為空！")
+                else:
+                    if end_date < start_date:
+                        st.error("結束日期必須在開始日期當天或之後！")
+                    else:
+                        # 創建新任務
+                        new_task = Task(
+                            sub_task=sub_task,
+                            main_task=main_task,
+                            priority=priority,
+                            status=status,
+                            start_date=start_date,
+                            end_date=end_date,
+                            responsible=responsible,
+                            notes=notes
+                        )
+                        sheets_utils.add_task(new_task)
+                        st.session_state.show_add_form = False
+                        st.success("任務新增成功！")
+                        st.rerun()
+            
+            if canceled:
+                st.session_state.show_add_form = False
                 st.rerun()
 
 def set_task_for_edit(task_id):
