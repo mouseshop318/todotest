@@ -315,13 +315,17 @@ def display_tasks(tasks, parameters):
     # 準備操作按鈕
     actions = []
     for task in filtered_tasks:
-        # 為每個任務創建HTML格式的按鈕
-        edit_btn = f'<a href="#" id="edit_{task.id}" style="text-decoration:none; margin-right:10px;">🖊️</a>'
-        delete_btn = f'<a href="#" id="delete_{task.id}" style="text-decoration:none; color:red;">🗑️</a>'
-        actions.append(f"{edit_btn} {delete_btn}")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🖊️", key=f"edit_{task.id}"):
+                show_edit_task_form(task, parameters)
+        with col2:
+            if st.button("🗑️", key=f"delete_{task.id}", type="secondary"):
+                delete_task(task.id)
+        actions.append("編輯 刪除")
     
     # 添加操作列
-    display_df['操作'] = actions
+    display_df['操作'] = "操作"
     
     # 顯示表格
     display_columns = [
@@ -375,30 +379,7 @@ def display_tasks(tasks, parameters):
         hide_index=True
     )
     
-    # 在表格下方放置操作按鈕，這樣用戶可以更方便地點擊
-    st.subheader("任務操作")
-    
-    # 建立操作列
-    col1, col2, col3 = st.columns([2, 1, 1])
-    
-    with col1:
-        selected_task_id = st.selectbox(
-            "選擇要操作的任務", 
-            options=[task.id for task in filtered_tasks],
-            format_func=lambda x: next((t.sub_task for t in filtered_tasks if t.id == x), "")
-        )
-    
-    selected_task = next((t for t in filtered_tasks if t.id == selected_task_id), None)
-    
-    if selected_task:
-        with col2:
-            if st.button("🖊️ 編輯選定的任務", key=f"edit_btn_{selected_task_id}"):
-                show_edit_task_form(selected_task, parameters)
-        
-        with col3:
-            if st.button("🗑️ 刪除選定的任務", key=f"delete_btn_{selected_task_id}"):
-                if delete_task(selected_task_id):
-                    st.rerun()
+    # 操作直接整合在表格中的每一行
 
 def show_edit_task_form(task, parameters):
     """顯示編輯任務表單。"""
@@ -408,8 +389,6 @@ def show_edit_task_form(task, parameters):
     st.subheader("編輯任務")
     with st.form("edit_task_form"):
         st.header("編輯任務")
-        
-        with st.form(key="edit_task_form"):
             col1, col2 = st.columns(2)
             
             with col1:
@@ -501,8 +480,6 @@ def show_add_task_form(parameters):
     st.subheader("新增任務")
     with st.form("add_task_form"):
         st.header("新增任務")
-        
-        with st.form(key="add_task_form"):
             col1, col2 = st.columns(2)
             
             with col1:
